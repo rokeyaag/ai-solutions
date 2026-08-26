@@ -119,3 +119,10 @@ async def serve_demo_widget():
     if content:
         return HTMLResponse(content=content)
     return HTMLResponse("<h1>Widget Demo Page</h1>")
+
+# Export Mangum serverless handler for Vercel
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except Exception:
+    handler = app
