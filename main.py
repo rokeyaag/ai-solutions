@@ -1,6 +1,13 @@
 import os
+import sys
+
+# Ensure root directory is in sys.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,7 +25,7 @@ from routers.settings_routes import router as settings_router
 
 # Initialize FastAPI Application
 app = FastAPI(
-    title="Comprehensive AI SaaS Dashboard Platform",
+    title="NexusAI - Comprehensive AI SaaS Dashboard Platform",
     description="Enterprise-ready multi-feature AI SaaS platform with 10 integrated modules.",
     version="2.0.0"
 )
@@ -45,25 +52,27 @@ app.include_router(widget_router)
 app.include_router(settings_router)
 
 # Mount Static Assets
-static_path = os.path.join(os.path.dirname(__file__), "static")
-os.makedirs(static_path, exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_path), name="static")
+static_path = os.path.join(BASE_DIR, "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
     """Serves the main AI SaaS Dashboard single-page application."""
-    index_file = os.path.join(static_path, "index.html")
+    index_file = os.path.join(BASE_DIR, "static", "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return HTMLResponse("<h1>AI SaaS Dashboard is initializing... Please refresh in a moment.</h1>")
+        with open(index_file, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h1>NexusAI SaaS Dashboard is ready.</h1>")
 
 @app.get("/demo-widget", response_class=HTMLResponse)
 async def serve_demo_widget():
     """Demonstration webpage showing the embeddable chatbot widget in action."""
-    demo_file = os.path.join(static_path, "widget_demo.html")
+    demo_file = os.path.join(BASE_DIR, "static", "widget_demo.html")
     if os.path.exists(demo_file):
-        return FileResponse(demo_file)
-    return HTMLResponse("<h1>Widget demo page</h1>")
+        with open(demo_file, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h1>Widget Demo Page</h1>")
 
 if __name__ == "__main__":
     import uvicorn
