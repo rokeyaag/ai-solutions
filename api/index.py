@@ -8,7 +8,6 @@ if BASE_DIR not in sys.path:
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, Response
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import config
@@ -39,7 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include All 10 Routers
+# Include All 10 Module Routers
 app.include_router(dashboard_router)
 app.include_router(chat_router)
 app.include_router(rag_router)
@@ -67,29 +66,21 @@ def find_file(relative_path: str) -> str:
                 pass
     return ""
 
-# Static file endpoints for Vercel Serverless
-@app.get("/static/css/custom.css")
-async def serve_custom_css():
-    content = find_file("static/css/custom.css")
-    return Response(content=content, media_type="text/css")
-
-@app.get("/static/js/app.js")
-async def serve_app_js():
-    content = find_file("static/js/app.js")
-    return Response(content=content, media_type="application/javascript")
-
-@app.get("/static/widget.js")
-async def serve_widget_js():
-    content = find_file("static/widget.js")
-    return Response(content=content, media_type="application/javascript")
-
-# Mount static folder if available
-static_dir = os.path.join(BASE_DIR, "static")
-if os.path.exists(static_dir):
-    try:
-        app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    except Exception:
-        pass
+@app.get("/static/{file_path:path}")
+async def serve_static_file(file_path: str):
+    """Serves static files directly in serverless environment."""
+    content = find_file(f"static/{file_path}")
+    if file_path.endswith(".css"):
+        media = "text/css"
+    elif file_path.endswith(".js"):
+        media = "application/javascript"
+    elif file_path.endswith(".html"):
+        media = "text/html"
+    elif file_path.endswith(".json"):
+        media = "application/json"
+    else:
+        media = "text/plain"
+    return Response(content=content, media_type=media)
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
