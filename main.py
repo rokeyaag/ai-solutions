@@ -69,5 +69,5 @@ async def serve_demo_widget():
     return HTMLResponse("<h1>Widget Demo Page</h1>")
 
 if __name__ == "__main__":
-    print(f"🚀 Starting AI SaaS Dashboard at http://{config.HOST}:{config.PORT}")
+    print(f"Starting AI SaaS Dashboard at http://{config.HOST}:{config.PORT}")
     uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=config.DEBUG)
