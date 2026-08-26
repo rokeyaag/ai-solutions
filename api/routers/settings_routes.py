@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
-from config import config
+try:
+    from config import config
+except Exception:
+    from api.config import config
 
 router = APIRouter(prefix="/api/settings", tags=["API Settings & Multi-Model Engine"])
 
