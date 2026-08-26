@@ -63,7 +63,7 @@ class RAGEngine:
         self.documents[doc_id] = RAGDocument(doc_id, "SaaS_Architecture_Best_Practices.pdf", sample_text, len(sample_text))
 
     def add_document(self, filename: str, content: str, file_size: int) -> Dict[str, Any]:
-        doc_id = f"doc_{len(self.documents) + 1}_{int(os.times().system * 100)}"
+        doc_id = f"doc_{len(self.documents) + 1}_{int(time.time() * 100)}"
         doc = RAGDocument(doc_id, filename, content, file_size)
         self.documents[doc_id] = doc
         return {
