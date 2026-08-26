@@ -1,43 +1,26 @@
 import os
 import sys
 
-# Ensure both api folder and parent folder are in sys.path
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-PARENT_DIR = os.path.dirname(CURRENT_DIR)
-
-for p in [CURRENT_DIR, PARENT_DIR]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+# Ensure root directory is in sys.path
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, Response, JSONResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-# Resilient dual-fallback imports
-try:
-    from config import config
-    from routers.dashboard_routes import router as dashboard_router
-    from routers.chat_routes import router as chat_router
-    from routers.rag_routes import router as rag_router
-    from routers.copy_routes import router as copy_router
-    from routers.vision_routes import router as vision_router
-    from routers.audio_routes import router as audio_router
-    from routers.code_routes import router as code_router
-    from routers.research_routes import router as research_router
-    from routers.widget_routes import router as widget_router
-    from routers.settings_routes import router as settings_router
-except Exception:
-    from api.config import config
-    from api.routers.dashboard_routes import router as dashboard_router
-    from api.routers.chat_routes import router as chat_router
-    from api.routers.rag_routes import router as rag_router
-    from api.routers.copy_routes import router as copy_router
-    from api.routers.vision_routes import router as vision_router
-    from api.routers.audio_routes import router as audio_router
-    from api.routers.code_routes import router as code_router
-    from api.routers.research_routes import router as research_router
-    from api.routers.widget_routes import router as widget_router
-    from api.routers.settings_routes import router as settings_router
+from config import config
+from routers.dashboard_routes import router as dashboard_router
+from routers.chat_routes import router as chat_router
+from routers.rag_routes import router as rag_router
+from routers.copy_routes import router as copy_router
+from routers.vision_routes import router as vision_router
+from routers.audio_routes import router as audio_router
+from routers.code_routes import router as code_router
+from routers.research_routes import router as research_router
+from routers.widget_routes import router as widget_router
+from routers.settings_routes import router as settings_router
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -69,11 +52,9 @@ app.include_router(settings_router)
 
 def find_file(relative_path: str) -> str:
     search_paths = [
-        os.path.join(CURRENT_DIR, relative_path),
-        os.path.join(PARENT_DIR, relative_path),
+        os.path.join(ROOT_DIR, relative_path),
         os.path.join(os.getcwd(), relative_path),
-        f"/var/task/{relative_path}",
-        f"/var/task/api/{relative_path}"
+        f"/var/task/{relative_path}"
     ]
     for p in search_paths:
         if os.path.exists(p):
@@ -119,10 +100,3 @@ async def serve_demo_widget():
     if content:
         return HTMLResponse(content=content)
     return HTMLResponse("<h1>Widget Demo Page</h1>")
-
-# Export Mangum serverless handler for Vercel
-try:
-    from mangum import Mangum
-    handler = Mangum(app, lifespan="off")
-except Exception:
-    handler = app
