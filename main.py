@@ -1,7 +1,6 @@
 import os
 import sys
 
-# Ensure root directory is in sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
@@ -51,27 +50,45 @@ app.include_router(research_router)
 app.include_router(widget_router)
 app.include_router(settings_router)
 
-# Mount Static Assets
-static_path = os.path.join(BASE_DIR, "static")
-if os.path.exists(static_path):
-    app.mount("/static", StaticFiles(directory=static_path), name="static")
+# Locate and Mount Static Assets
+static_candidates = [
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(os.path.dirname(BASE_DIR), "static"),
+    "/var/task/static"
+]
+
+static_path = next((p for p in static_candidates if os.path.exists(p)), None)
+if static_path:
+    try:
+        app.mount("/static", StaticFiles(directory=static_path), name="static")
+    except Exception:
+        pass
+
+def get_static_file_content(filename: str) -> str:
+    for candidate in static_candidates:
+        file_path = os.path.join(candidate, filename)
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+    return ""
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
     """Serves the main AI SaaS Dashboard single-page application."""
-    index_file = os.path.join(BASE_DIR, "static", "index.html")
-    if os.path.exists(index_file):
-        with open(index_file, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+    content = get_static_file_content("index.html")
+    if content:
+        return HTMLResponse(content=content)
     return HTMLResponse("<h1>NexusAI SaaS Dashboard is ready.</h1>")
 
 @app.get("/demo-widget", response_class=HTMLResponse)
 async def serve_demo_widget():
     """Demonstration webpage showing the embeddable chatbot widget in action."""
-    demo_file = os.path.join(BASE_DIR, "static", "widget_demo.html")
-    if os.path.exists(demo_file):
-        with open(demo_file, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+    content = get_static_file_content("widget_demo.html")
+    if content:
+        return HTMLResponse(content=content)
     return HTMLResponse("<h1>Widget Demo Page</h1>")
 
 if __name__ == "__main__":
